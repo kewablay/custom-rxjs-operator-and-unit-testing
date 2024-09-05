@@ -1,29 +1,55 @@
-import { TestBed } from '@angular/core/testing';
+// src/app/app.component.spec.ts
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
+import { of } from 'rxjs';
+import { multiplyBy } from './operators/multiply-by.operator';
 
 describe('AppComponent', () => {
+  let component: AppComponent;
+  let fixture: ComponentFixture<AppComponent>;
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
     }).compileComponents();
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+  beforeEach(() => {
+    fixture = TestBed.createComponent(AppComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
-  it(`should have the 'custom-rxjs-operator-and-unit-testing' title`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('custom-rxjs-operator-and-unit-testing');
+  it('should create the app component', () => {
+    expect(component).toBeTruthy();
   });
 
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
+  it('should apply the multiplyBy operator correctly', () => {
+    // Resetting component's finalValues for test
+    component.finalValues = [];
+    const values = [1, 2, 'three', 4, null];
+    const expectedFinalValues = [2, 4, 8];
+
+    of(...values).pipe(multiplyBy(2)).subscribe(value => {
+      if (typeof value === 'number') {
+        component.finalValues.push(value);
+      }
+    });
+
+    expect(component.finalValues).toEqual(expectedFinalValues);
+  });
+
+  it('should render initial and final values in the template', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, custom-rxjs-operator-and-unit-testing');
+
+    const initialValues = compiled.querySelectorAll('.list-container:nth-of-type(1) li');
+    expect(initialValues.length).toBe(5); // Matches the number of initial items
+
+    const finalValues = compiled.querySelectorAll('.list-container:nth-of-type(2) li');
+    expect(finalValues.length).toBe(3); // Only numeric values multiplied by 2
+    expect(finalValues[0].textContent).toContain('2');
+    expect(finalValues[1].textContent).toContain('4');
+    expect(finalValues[2].textContent).toContain('8');
   });
 });
